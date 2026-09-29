@@ -17,28 +17,40 @@ const purchaseRoute = require('./routes/purchase.route');
 const salesRoute = require('./routes/sales.route');
 const reportsRoute = require('./routes/reports.route');
 const SaleReportRouter = require('./routes/saleReport.route');
-const { stockReposts } = require('./controllers/stockReport.controller');
+const stockReportsRoute = require('./routes/stockReports.route');
 const rateLimit = require('express-rate-limit');
 const customerAuthRoute = require('./routes/customer.authe.route');
 const customerStore = require('./routes/cutomerStore.route');
 const invoiceRoute = require('./routes/createInvoice.route');
 
 //create cors for connect with axios 
+const normalizeOrigin = (value) => (value || '').trim().replace(/^['"]|['"]$/g, '');
+
 const allowedOrigins = [
-  process.env.LOCAL_DOMAIN,
-  process.env.LOCAL_DOMAINONE,
-].filter(Boolean); // Filter out undefined env values
+  normalizeOrigin(process.env.LOCAL_DOMAIN),
+  normalizeOrigin(process.env.LOCAL_DOMAINONE),
+  'https://e-shop-dashboard.onrender.com',
+  'https://e-shop-7g1h.onrender.com',
+]
+  .flatMap((value) => value.split(','))
+  .map(normalizeOrigin)
+  .filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed by server'));
+
+    if (
+      allowedOrigins.includes(origin) ||
+      process.env.NODE_ENV !== 'production' ||
+      process.env.CORS_ALLOW_ALL === 'true'
+    ) {
+      return callback(null, true);
     }
+
+    console.warn(`[CORS] Blocked origin: ${origin}`);
+    return callback(null, false);
   },
   credentials: true
 }));
@@ -85,7 +97,7 @@ app.use('/api/sales',authGuard, salesRoute )
 app.use('/api/reports', authGuard, reportsRoute)
 app.use('/api/auth',authRoute)
 app.use('/api/salereports', authGuard, SaleReportRouter)
-app.use('/api/stockreports', authGuard, stockReposts)
+app.use('/api/stockreports', authGuard, stockReportsRoute)
 app.use('/api/uploads', express.static('upload'))
 
 
