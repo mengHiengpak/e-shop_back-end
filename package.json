@@ -19,8 +19,8 @@
     "qs": "^6.15.2"
   },
   "scripts": {
-    "start": "nodemon -L server.js",
-    "start-server": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon -L server.js"
   },
   "nodemonConfig": {
     "ext": "js,json,env"
